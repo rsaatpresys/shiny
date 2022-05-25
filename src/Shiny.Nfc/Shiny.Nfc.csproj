@@ -7,5 +7,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Shiny.Core\Shiny.Core.csproj" />
+        <ProjectReference Include="..\Shiny.Nfc.Abstractions\Shiny.Nfc.Abstractions.csproj" />
     </ItemGroup>
 </Project>

@@ -8,6 +8,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Shiny.Core\Shiny.Core.csproj" />
         <ProjectReference Include="..\Shiny.Notifications.Common\Shiny.Notifications.Common.csproj" />
+        <ProjectReference Include="..\Shiny.Push.Abstractions\Shiny.Push.Abstractions.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(IsAndroidBuild)' == 'true'">
