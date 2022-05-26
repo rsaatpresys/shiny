@@ -1,10 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Xamarin.Legacy.Sdk/0.2.0-alpha1">
 
     <PropertyGroup>
-        <TargetFrameworks>net6.0-ios;net6.0-maccatalyst;net6.0-android</TargetFrameworks>
+        <TargetFrameworks>xamarin.ios10;monoandroid12.0;net6.0-ios;net6.0-maccatalyst;net6.0-android</TargetFrameworks>
         <Description>The Shiny Core Foundation where all Shiny modules are built on</Description>
         <RootNamespace>Shiny</RootNamespace>
     </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Include="..\LegacyHacks.cs" Link="Platforms\Shared\LegacyHacks.cs" />
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="System.Reactive" />

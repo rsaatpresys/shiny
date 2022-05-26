@@ -1,9 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Xamarin.Legacy.Sdk/0.2.0-alpha1">
 
     <PropertyGroup>
-        <TargetFrameworks>net6.0-ios;net6.0-android</TargetFrameworks>
+        <TargetFrameworks>xamarin.ios10;monoandroid12.0;net6.0-ios;net6.0-android</TargetFrameworks>
         <Description>Shiny Near Field Communication (NFC)</Description>
     </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Include="..\LegacyHacks.cs" Link="Platforms\Shared\LegacyHacks.cs" />
+    </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Shiny.Core\Shiny.Core.csproj" />

@@ -42,6 +42,10 @@
         <PackageReference Update="Xamarin.Google.Android.DataTransport.TransportRuntime" Version="3.0.1.3" />
     </ItemGroup>
 
+    <ItemGroup Condition="$(TargetFramework.StartsWith('xamarin.ios')) OR $(TargetFramework.StartsWith('monoandroid'))">
+        <PackageReference Include="System.Text.Json" Version="6.0.3" />
+    </ItemGroup> 
+
     <ItemGroup>
         <None Include="Platforms\**\*.cs" />
         <Compile Remove="Platforms\**\*.cs" />
