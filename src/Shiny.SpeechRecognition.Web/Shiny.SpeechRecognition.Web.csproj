@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Shiny.SpeechRecognition.Abstractions\Shiny.SpeechRecognition.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

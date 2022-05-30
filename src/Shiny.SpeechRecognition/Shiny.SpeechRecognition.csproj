@@ -7,5 +7,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Shiny.Core\Shiny.Core.csproj" />
+        <ProjectReference Include="..\Shiny.SpeechRecognition.Abstractions\Shiny.SpeechRecognition.Abstractions.csproj" />
     </ItemGroup>
 </Project>
