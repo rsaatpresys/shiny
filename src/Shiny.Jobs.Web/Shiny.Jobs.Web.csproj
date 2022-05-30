@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <!--<Project Sdk="Microsoft.NET.Sdk.Razor">-->
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <SupportedPlatform Include="browser" />
+        <PackageReference Include="Microsoft.JSInterop.WebAssembly" Version="6.0.5" />
+        <!--<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.0" />-->
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Shiny.Jobs.Abstractions\Shiny.Jobs.Abstractions.csproj" />
+    </ItemGroup>
+</Project>
