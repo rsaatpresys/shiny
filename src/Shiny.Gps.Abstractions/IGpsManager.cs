@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Shiny.Locations
 {
-    public interface IGpsManager : IShinyForegroundManager
+    public interface IGpsManager  //: IShinyForegroundManager
     {
         /// <summary>
         /// If the device is currently listening to GPS broadcasts
@@ -12,12 +12,12 @@ namespace Shiny.Locations
         GpsRequest? CurrentListener { get; }
 
 
-        /// <summary>
-        /// Request access to use GPS hardware
-        /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        Task<AccessState> RequestAccess(GpsRequest request);
+        ///// <summary>
+        ///// Request access to use GPS hardware
+        ///// </summary>
+        ///// <param name="request"></param>
+        ///// <returns></returns>
+        //Task<AccessState> RequestAccess(GpsRequest request);
 
 
         /// <summary>

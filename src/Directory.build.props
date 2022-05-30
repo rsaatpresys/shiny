@@ -4,7 +4,8 @@
         <Owners>aritchie;shinylib</Owners>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <DisableExtraReferences>False</DisableExtraReferences>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <!--<DisableExtraReferences>False</DisableExtraReferences>-->
         <NoWarn>$(NoWarn);1591;1701;1591;1702;1705;VSX1000;NU1603</NoWarn>
         <Description>Shiny</Description>
         <Product>$(AssemblyName) ($(TargetFramework))</Product>
@@ -15,7 +16,7 @@
         <PackageTags>xamarin ios android ble bluetooth bluetoothle push notifications sensors geofences gps location background jobs settings speech sensors</PackageTags>
         <PackageReadmeFile>readme.md</PackageReadmeFile>
         <RepositoryUrl>https://github.com/shinyorg/shiny</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
+        <RepositoryType>git</RepositoryType>        
         <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
         <AndroidTargetFramework>monoandroid12.0</AndroidTargetFramework>
     </PropertyGroup>
@@ -36,7 +37,6 @@
     <PropertyGroup Condition="$(TargetFramework.Contains('android'))">
         <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
         <TargetPlatformMinVersion>31.0</TargetPlatformMinVersion>
-        <DefineConstants>$(DefineConstants);__ANDROID__;MONOANDROID</DefineConstants>
         <AndroidGenerateResourceDesigner>false</AndroidGenerateResourceDesigner>
         <AndroidUseIntermediateDesignerFile>false</AndroidUseIntermediateDesignerFile>
         <IsAndroidBuild>true</IsAndroidBuild>

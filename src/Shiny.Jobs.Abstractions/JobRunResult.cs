@@ -1,5 +1,4 @@
-﻿using System;
-namespace Shiny.Jobs;
+﻿namespace Shiny.Jobs;
 
 
 public record JobRunResult(

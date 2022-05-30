@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using Shiny.Stores;
-
-namespace Shiny.Jobs;
+﻿namespace Shiny.Jobs;
 
 
-public class JobInfo : IStoreEntity
+public class JobInfo // : IStoreEntity
 {
     public JobInfo(Type jobType, string? identifier = null, bool runOnForeground = false)
     {
         if (jobType == null)
-            throw new ArgumentException("Job Type not set");
+            throw new ArgumentNullException(nameof(jobType), "Job Type not set");
 
         this.Identifier = identifier ?? jobType.AssemblyQualifiedName;
         this.TypeName = jobType.AssemblyQualifiedName;
@@ -47,5 +43,5 @@ public class JobInfo : IStoreEntity
     public Dictionary<string, object> Parameters { get; set; } = new();
 
 
-    public bool IsValid() => this.TypeName.IsEmpty() || Type.GetType(this.TypeName) != null;
+    public bool IsValid() => !String.IsNullOrWhiteSpace(this.TypeName) || Type.GetType(this.TypeName) != null;
 }

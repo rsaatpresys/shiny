@@ -35,13 +35,6 @@ public interface IJobManager
 
 
     /// <summary>
-    /// Requests/ensures appropriate platform permissions where necessary
-    /// </summary>
-    /// <returns></returns>
-    Task<AccessState> RequestAccess();
-
-
-    /// <summary>
     /// This force runs the manager and any registered jobs
     /// </summary>
     /// <param name="cancelToken"></param>
