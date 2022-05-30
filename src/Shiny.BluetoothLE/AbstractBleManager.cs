@@ -6,7 +6,6 @@ namespace Shiny.BluetoothLE
 {
     public abstract class AbstractBleManager : IBleManager
     {
-        public abstract IObservable<AccessState> RequestAccess();
         public abstract IObservable<ScanResult> Scan(ScanConfig? config = null);
         public abstract void StopScan();
 

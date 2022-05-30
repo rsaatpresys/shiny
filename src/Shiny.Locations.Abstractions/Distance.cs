@@ -1,5 +1,4 @@
-﻿using System;
-using Shiny.Locations;
+﻿using Shiny.Locations;
 
 namespace Shiny;
 

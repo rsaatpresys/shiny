@@ -10,7 +10,7 @@ public interface IBleDelegate
     /// </summary>
     /// <param name="state"></param>
     /// <returns></returns>
-    Task OnAdapterStateChanged(AccessState state);
+    //Task OnAdapterStateChanged(AccessState state);
 
 
     /// <summary>
@@ -24,6 +24,6 @@ public interface IBleDelegate
 
 public abstract class BleDelegate : IBleDelegate
 {
-    public virtual Task OnAdapterStateChanged(AccessState state) => Task.CompletedTask;
+    //public virtual Task OnAdapterStateChanged(AccessState state) => Task.CompletedTask;
     public virtual Task OnConnected(IPeripheral peripheral) => Task.CompletedTask;
 }

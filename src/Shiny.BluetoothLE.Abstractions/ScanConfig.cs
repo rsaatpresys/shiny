@@ -15,7 +15,7 @@ public record ScanConfig(
     /// Currently, this only affects Android peripherals
     /// It defaults to false to be transparent/non-breaking with existing code
     /// </summary>
-    bool AndroidUseScanBatching = false, // TODO: move this to compiler flags
+    //bool AndroidUseScanBatching = false, // TODO: move this to compiler flags
 
     /// <summary>
     /// Filters scan to peripherals that advertise specified service UUIDs

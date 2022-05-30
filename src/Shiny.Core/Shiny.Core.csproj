@@ -20,4 +20,8 @@
         <PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime" />
         <PackageReference Include="Xamarin.AndroidX.Lifecycle.Common" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Locations\" />
+    </ItemGroup>
 </Project>

@@ -25,8 +25,8 @@ namespace Shiny.BluetoothLE
         /// <summary>
         /// Connect to a peripheral
         /// </summary>
-        /// <param name="config">Connection configuration</param>
-        void Connect(ConnectionConfig? config = null);
+        void Connect();
+        // TODO: autoconnect and connection priority
 
         /// <summary>
         /// Disconnect from the peripheral and cancel persistent connection

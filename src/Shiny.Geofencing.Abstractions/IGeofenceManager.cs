@@ -8,12 +8,6 @@ namespace Shiny.Locations;
 public interface IGeofenceManager
 {
     /// <summary>
-    /// Requests/ensures appropriate platform permissions where necessary
-    /// </summary>
-    /// <returns></returns>
-    Task<AccessState> RequestAccess();
-
-    /// <summary>
     /// Current set of geofences being monitored
     /// </summary>
     Task<IList<GeofenceRegion>> GetMonitorRegions();

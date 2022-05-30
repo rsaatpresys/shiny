@@ -21,7 +21,7 @@ namespace Shiny.BluetoothLE
         public virtual int MtuSize { get; } = 20;
         public virtual IObservable<BleException> WhenConnectionFailed() => Observable.Empty<BleException>();
 
-        public abstract void Connect(ConnectionConfig? config);
+        public abstract void Connect();
         public abstract void CancelConnection();
         public abstract IObservable<ConnectionState> WhenStatusChanged();
         public abstract IObservable<IList<IGattService>> GetServices();

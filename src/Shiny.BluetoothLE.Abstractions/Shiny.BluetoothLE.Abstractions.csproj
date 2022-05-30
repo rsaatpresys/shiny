@@ -5,7 +5,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Shiny.Locations.Abstractions\Shiny.Locations.Abstractions.csproj" />
+        <PackageReference Include="System.Reactive" />
     </ItemGroup>
-
 </Project>
