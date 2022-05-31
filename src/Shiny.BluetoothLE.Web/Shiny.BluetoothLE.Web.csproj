@@ -13,5 +13,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Shiny.BluetoothLE.Abstractions\Shiny.BluetoothLE.Abstractions.csproj" />
+        <ProjectReference Include="..\Shiny.Core.Web\Shiny.Core.Web.csproj" />
     </ItemGroup>
 </Project>

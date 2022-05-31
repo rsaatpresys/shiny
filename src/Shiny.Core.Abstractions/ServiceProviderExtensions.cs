@@ -130,16 +130,15 @@ public static class ServiceExtensions
 
 
 
-    public static Task RunDelegates<T>(this IServiceProvider services, Func<T, Task> execute, Action<Exception>? onError = null)
+    public static Task RunDelegates<T>(this IServiceProvider services, Func<T, Task> execute, Action<T, Exception> onError)
         => services.GetServices<T>().RunDelegates(execute, onError);
 
 
-    public static async Task RunDelegates<T>(this IEnumerable<T> services, Func<T, Task> execute, Action<Exception>? onError = null)
+    public static async Task RunDelegates<T>(this IEnumerable<T> services, Func<T, Task> execute, Action<T, Exception> onError)
     {
         if (services == null)
             return;
 
-        var logger = Host.Current.Logging.CreateLogger<T>();
         var tasks = services
             .Select(async x =>
             {
@@ -149,10 +148,7 @@ public static class ServiceExtensions
                 }
                 catch (Exception ex)
                 {
-                    if (onError == null)
-                        logger.LogError(ex, "Error executing delegate");
-                    else
-                        onError(ex);
+                    onError?.Invoke(x, ex);
                 }
             })
             .ToList();

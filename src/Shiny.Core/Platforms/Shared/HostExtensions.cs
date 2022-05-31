@@ -10,6 +10,15 @@ namespace Shiny;
 
 public static class HostExtensions
 {
+    public static IServiceCollection AddRepository<TStoreConverter, TEntity>(this IServiceCollection services)
+        where TStoreConverter : class, IStoreConverter<TEntity>, new()
+        where TEntity : IStoreEntity
+    {
+        services.AddSingleton<IRepository<TEntity>, JsonFileRepository<TStoreConverter, TEntity>>();
+        return services;
+    }
+
+
     public static void AddCommon(this IServiceCollection services)
     {
         services.TryAddSingleton<ISerializer, DefaultSerializer>();

@@ -22,6 +22,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Locations\" />
+      <ProjectReference Include="..\Shiny.Core.Abstractions\Shiny.Core.Abstractions.csproj" />
     </ItemGroup>
 </Project>

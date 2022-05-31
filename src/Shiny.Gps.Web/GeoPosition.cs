@@ -1,61 +1,38 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 
+namespace Shiny.Locations.Web;
 
-namespace Shiny.Locations.Web
+
+public class GeoPosition
 {
-    public class GeoPosition : IGpsReading
-    {
-        [JsonIgnore]
-        public double PositionAccuracy => this.Accuracy;
+    [JsonPropertyName("latitude")]
+    public double Latitude { get; set; }
 
-        [JsonIgnore]
-        public double Accuracy => this.RawAccuracy ?? -1;
+    [JsonPropertyName("longitude")]
+    public double Longitude { get; set; }
 
-        [JsonIgnore]
-        public double Speed { get; set; }
-        
-        [JsonIgnore]
-        public double Altitude => this.RawAltitude ?? -1;
+    [JsonPropertyName("altitudeAccuracy")]
+    public long? AltitudeAccuracy { get; set; }
 
-        [JsonPropertyName("latitude")]
-        public double Latitude { get; set; }
+    [JsonPropertyName("timestamp")]
+    public long Epoch { get; set; }
 
-        [JsonPropertyName("longitude")]
-        public double Longitude { get; set; }
+    [JsonPropertyName("accuracy")]
+    public double? RawAccuracy { get; set; }
 
-        [JsonIgnore]
-        public double Heading => this.RawHeading ?? -1;
+    [JsonPropertyName("heading")]
+    public double? RawHeading { get; set; }
 
+    [JsonPropertyName("speed")]
+    public double? RawSpeed { get; set; }
 
-        [JsonPropertyName("altitudeAccuracy")]
-        public long? AltitudeAccuracy { get; set; }
+    [JsonPropertyName("altitude")]
+    public double? RawAltitude { get; set; }
 
-        [JsonIgnore]
-        public double HeadingAccuracy => -1;
+    Position? position;
+    public Position Position => this.position ??= new Position(this.Latitude, this.Longitude);
 
-        [JsonIgnore]
-        public double SpeedAccuracy => -1;
-
-        [JsonPropertyName("timestamp")]
-        public long Epoch { get; set; }
-
-        [JsonPropertyName("accuracy")]
-        public double? RawAccuracy { get; set; }
-
-        [JsonPropertyName("heading")]
-        public double? RawHeading { get; set; }
-
-        [JsonPropertyName("speed")]
-        public double? RawSpeed { get; set; }
-
-        [JsonPropertyName("altitude")]
-        public double? RawAltitude { get; set; }
-
-        Position? position;
-        public Position Position => this.position ??= new Position(this.Latitude, this.Longitude);
-
-        [JsonIgnore]
-        public DateTime Timestamp => DateTimeOffset.FromUnixTimeMilliseconds(this.Epoch).DateTime;
-    }
+    [JsonIgnore]
+    public DateTime Timestamp => DateTimeOffset.FromUnixTimeMilliseconds(this.Epoch).DateTime;
 }

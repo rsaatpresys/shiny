@@ -12,6 +12,8 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="System.Reactive" />
         <ProjectReference Include="..\Shiny.Gps.Abstractions\Shiny.Gps.Abstractions.csproj" />
+        <ProjectReference Include="..\Shiny.Core.Web\Shiny.Core.Web.csproj" />
     </ItemGroup>
 </Project>

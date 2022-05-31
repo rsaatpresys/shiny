@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Shiny.Permissions.Abstractions\Shiny.Permissions.Abstractions.csproj" />
+    <ProjectReference Include="..\Shiny.Core.Abstractions\Shiny.Core.Abstractions.csproj" />
   </ItemGroup>
-
 </Project>

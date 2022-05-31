@@ -90,10 +90,11 @@ public static class JobExtensions
     /// <param name="services">The service collection to register with</param>
     /// <param name="jobInfo">The job info to register</param>
     /// <param name="clearJobQueueFirst">If set to true, before registering all new jobs during startup, an command will be issued to clear out any previous jobs - this is useful during application upgrades or if you aren't manually registering jobs</param>
-    public static void AddJob(this IServiceCollection services, JobInfo jobInfo, bool? clearJobQueueFirst = null)
+    public static IServiceCollection AddJob(this IServiceCollection services, JobInfo jobInfo, bool? clearJobQueueFirst = null)
     {
-        services.AddJobs(clearJobQueueFirst);
-        JobsStartup.AddJob(jobInfo);
+        //services.AddJobs(clearJobQueueFirst);
+        //JobsStartup.AddJob(jobInfo);
+        return services;
     }
 
 
@@ -103,7 +104,7 @@ public static class JobExtensions
     /// <param name="services"></param>
     /// <param name="jobType"></param>
     /// <param name="identifier"></param>
-    public static void AddJob(
+    public static IServiceCollection AddJob(
         this IServiceCollection services,
         Type jobType,
         string? identifier = null,
@@ -112,15 +113,14 @@ public static class JobExtensions
         bool? clearJobQueueFirst = null,
         params (string Key, object value)[] parameters
     )
-    {
-        services.AddJob(new JobInfo(jobType, identifier)
+        => services.AddJob(new JobInfo(jobType, identifier)
         {
             RequiredInternetAccess = requiredNetwork,
             RunOnForeground = runInForeground,
             Repeat = true,
             //Parameters = parameters?.ToDictionary() // TODO
         }, clearJobQueueFirst);
-    }
+
 
     public static void SetParameter<T>(this JobInfo job, string key, T value)
         => job.Parameters[key] = value;
