@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ShinyTest.MainPage"
+             >
+			 
+    <ScrollView>
+        <VerticalStackLayout 
+            Spacing="25" 
+            Padding="40,20" 
+            >
+
+            <Entry 
+                x:Name="txtDeviceName"
+                Text="BT05"
+                FontSize="Title"
+                />
+
+            <Label x:Name="lblDeviceName" 
+                   Text="Dispositivo:????"
+                   MinimumWidthRequest="300"
+                   HorizontalOptions="Center"
+                   />
+
+            <Button 
+                x:Name="cmdTestBatteryService"
+                Text="Testa Leitura Bateria"
+                Clicked="cmdTestBatteryService_Clicked"
+                MinimumWidthRequest="300"
+                HorizontalOptions="Center" />
+            
+            <Label x:Name="lblBatteryLevel" 
+                   Text="??"
+                   MinimumWidthRequest="300"
+                   HorizontalOptions="Center"
+                   />
+
+
+            <Button 
+                x:Name="cmdTestBatteryServiceNotify"
+                Text="Testa Notificação Bateria"
+                Clicked="cmdTestBatteryServiceNotify_Clicked"
+                MinimumWidthRequest="300"
+                HorizontalOptions="Center" />
+
+            <Label x:Name="lblBatteryLevelNotify" 
+                   Text="??"
+                   MinimumWidthRequest="200"
+                   HorizontalOptions="Center"
+                   />
+
+
+            <Button 
+                x:Name="cmdHM10Service"
+                Text="Teste HM-10"
+                Clicked="cmdHM10Service_Clicked"
+                MinimumWidthRequest="300"
+                HorizontalOptions="Center" />
+
+            <Label x:Name="lbHM10Service" 
+                   Text="??"
+                   MinimumWidthRequest="300"
+                   HorizontalOptions="Center"
+                   />
+
+
+
+            <Button 
+                x:Name="cmdTestPeriphericalRead"
+                Text="Testa Leitura Periferico"
+                Clicked="cmdTestPeriphericalReadClicked"
+                MinimumWidthRequest="0"
+                HorizontalOptions="Center"
+                IsVisible="false"
+                />
+
+        </VerticalStackLayout>
+    </ScrollView>
+ 
+</ContentPage>
