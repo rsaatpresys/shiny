@@ -5,8 +5,6 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
-using static Android.Content.ClipData;
-using static Java.Util.Jar.Attributes;
 
 namespace ShinyTest;
 
@@ -144,6 +142,8 @@ public partial class MainPage : ContentPage
 
     #endregion
 
+    #region Teste Leitura Periferico
+
     private async void cmdTestPeriphericalReadClicked(object sender, EventArgs e)
     {
 
@@ -200,6 +200,8 @@ public partial class MainPage : ContentPage
 
     }
 
+    #endregion
+
     #region "Conexão Bluetooth"
 
     private async Task FindPeripheral()
@@ -242,6 +244,13 @@ public partial class MainPage : ContentPage
 
     }
 
+    public IObservable<Shiny.AccessState> CheckPermissions()
+    {
+       var accessState =   this._bleManager.RequestAccess();
+        return accessState;
+        
+    }
+
     public IObservable<ScanResult> ScanForDevice(int timeout, string deviceName)
     {
 
@@ -263,6 +272,7 @@ public partial class MainPage : ContentPage
     }
     #endregion
 
+    #region HM-10 
 
     IObservable<GattCharacteristicResult> _hm10Notifications;
     IDisposable _hm10NotificationsDipose;
@@ -409,5 +419,47 @@ public partial class MainPage : ContentPage
 
 
     }
+
+
+    #endregion
+
+    #region ESP-32 
+
+    IObservable<GattCharacteristicResult> _mcsXvNotifications;
+    IDisposable _mcsXvNotificationsDipose;
+
+    private async void cmdMcsXvService_Clicked(object sender, EventArgs e)
+    {
+
+        try
+        {
+           var accessState =  await CheckPermissions(); 
+
+            if (accessState!=Shiny.AccessState.Available)
+            {
+                throw new PermissionException("Bluetooth State Not Available");
+            }
+
+            await FindPeripheral();
+
+
+        }
+        catch (Exception ex)
+        {
+            DisconnectPeripheral();
+
+            await DisplayAlert("Alert", "Error connecting to device:" + ex.Message, "OK");
+        }
+        finally
+        {
+
+        }
+
+
+    }
+
+
+    #endregion
+
 }
 

@@ -12,7 +12,7 @@
 
             <Entry 
                 x:Name="txtDeviceName"
-                Text="BT05"
+                Text="XV"
                 FontSize="Title"
                 />
 
@@ -58,6 +58,20 @@
                 HorizontalOptions="Center" />
 
             <Label x:Name="lbHM10Service" 
+                   Text="??"
+                   MinimumWidthRequest="300"
+                   HorizontalOptions="Center"
+                   />
+
+
+            <Button 
+                x:Name="cmdMcsXvService"
+                Text="Teste MCS-XV"
+                Clicked="cmdMcsXvService_Clicked"
+                MinimumWidthRequest="300"
+                HorizontalOptions="Center" />
+
+            <Label x:Name="lblMcsXvServiceService" 
                    Text="??"
                    MinimumWidthRequest="300"
                    HorizontalOptions="Center"
