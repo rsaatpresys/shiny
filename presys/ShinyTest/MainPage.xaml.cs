@@ -233,8 +233,8 @@ public partial class MainPage : ContentPage
 
     private async Task ConnectPeripheral()
     {
-        var connectionConfig = new ConnectionConfig();
-        connectionConfig.AutoConnect = false;
+        var connectionConfig = new ConnectionConfig(AutoConnect:false);
+        // connectionConfig.AutoConnect = false;
         await _peripheral.ConnectAsync(connectionConfig, timeout: new TimeSpan(0, 0, 5));
 
         var rssi = await _peripheral.ReadRssi();
