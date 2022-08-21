@@ -233,7 +233,7 @@ public partial class MainPage : ContentPage
 
     private async Task ConnectPeripheral()
     {
-        var connectionConfig = new ConnectionConfig(AutoConnect:false);
+        var connectionConfig = new ConnectionConfig(AutoConnect: false);
         // connectionConfig.AutoConnect = false;
         await _peripheral.ConnectAsync(connectionConfig, timeout: new TimeSpan(0, 0, 5));
 
@@ -246,9 +246,9 @@ public partial class MainPage : ContentPage
 
     public IObservable<Shiny.AccessState> CheckPermissions()
     {
-       var accessState =   this._bleManager.RequestAccess();
+        var accessState = this._bleManager.RequestAccess();
         return accessState;
-        
+
     }
 
     public IObservable<ScanResult> ScanForDevice(int timeout, string deviceName)
@@ -425,35 +425,189 @@ public partial class MainPage : ContentPage
 
     #region ESP-32 
 
-    IObservable<GattCharacteristicResult> _mcsXvNotifications;
-    IDisposable _mcsXvNotificationsDipose;
+    IObservable<GattCharacteristicResult> _mcsXvTxDataNotifications;
+    IDisposable _mcsXvTxDataNotificationsDispose;
+
+    IGattService _mcsxvUartService;
+    IGattCharacteristic _mcsXvUarRxDatatCharacteristic;
+    IGattCharacteristic _mcsXvUartTxDatatCharacteristic;
+
+
+    private async Task<IGattCharacteristic> FindMcsXvUarRxDatatCharacteristic()
+    {
+        var allCharecteristics = await _mcsxvUartService.GetCharacteristicsAsync().WaitAsync(TimeSpan.FromMilliseconds(5000));
+
+        var mcsxvUartRxDataUuid = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
+
+        var mcsxvUartRxData = allCharecteristics.FirstOrDefault(s => s.Uuid.ToLower() == mcsxvUartRxDataUuid.ToLower());
+
+        if (mcsxvUartRxData == null)
+        {
+            throw new InvalidOperationException("MCSXV Characteristic RxData Not Found ");
+        }
+
+        return mcsxvUartRxData;
+    }
+
+    private async Task<IGattCharacteristic> FindMcsXvUarTxDatatCharacteristic()
+    {
+        var allCharecteristics = await _mcsxvUartService.GetCharacteristicsAsync().WaitAsync(TimeSpan.FromMilliseconds(5000));
+
+        var mcsxvUartRxDataUuid = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
+
+        var mcsxvUartRxData = allCharecteristics.FirstOrDefault(s => s.Uuid.ToLower() == mcsxvUartRxDataUuid.ToLower());
+
+        if (mcsxvUartRxData == null)
+        {
+            throw new InvalidOperationException("MCSXV Characteristic TxData Not Found ");
+        }
+
+        return mcsxvUartRxData;
+    }
+
+    private async Task<IGattService> FindMcsxvUartService()
+    {
+        var mcsXvUartServiceUuid = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E";
+
+
+        var allServices = await _peripheral.GetServicesAsync().WaitAsync(TimeSpan.FromMilliseconds(5000));
+
+        var mcsxvUartService = allServices.FirstOrDefault(s => s.Uuid.ToLower() == mcsXvUartServiceUuid.ToLower());
+
+        if (mcsxvUartService == null)
+        {
+            throw new InvalidOperationException("MCSXV UART Service Not Found ");
+        }
+
+        return mcsxvUartService;
+    }
 
     private async void cmdMcsXvService_Clicked(object sender, EventArgs e)
     {
 
         try
         {
-           var accessState =  await CheckPermissions(); 
+            var accessState = await CheckPermissions();
 
-            if (accessState!=Shiny.AccessState.Available)
+            if (accessState != Shiny.AccessState.Available)
             {
                 throw new PermissionException("Bluetooth State Not Available");
             }
 
             await FindPeripheral();
 
+            if (_mcsxvUartService == null)
+            {
+                _mcsxvUartService = await FindMcsxvUartService();
+                
+            }
+
+            if (_mcsXvUarRxDatatCharacteristic == null)
+            {
+                _mcsXvUarRxDatatCharacteristic = await FindMcsXvUarRxDatatCharacteristic();
+            }
+
+            if (_mcsXvUartTxDatatCharacteristic == null)
+            {
+                _mcsXvUartTxDatatCharacteristic = await FindMcsXvUarTxDatatCharacteristic();
+            }
+
+
+            if (_mcsXvTxDataNotificationsDispose != null)
+            {
+                _mcsXvTxDataNotificationsDispose.Dispose();
+            }
+
+            _mcsXvTxDataNotifications = _mcsXvUartTxDatatCharacteristic.Notify(useIndicationsIfAvailable: true);
+
+
+            var responseMessage = new List<byte>();
+
+            _mcsXvTxDataNotificationsDispose = _mcsXvTxDataNotifications.Subscribe((x) =>
+            {
+                responseMessage.AddRange(x.Data);
+
+                Debug.WriteLine($"Message Received :{responseMessage.Count}");
+            });
+
+
+
+            lblMcsXvServiceService.Text = "Sending Message...";
+
+            var mtuSize = 20;
+
+            mtuSize = _peripheral.MtuSize;
+
+            var data = new byte[8]; //read 30 holding registers address 0 
+            var length = 8;
+            data[0] = 0x01;
+            data[1] = 0x03;
+            data[2] = 0x00;
+            data[3] = 0x00;
+            data[4] = 0x00;
+            data[5] = 0x1E;
+            data[6] = 0x00;
+            data[7] = 0x00;
+
+            var chunksMessage = data.Chunk(mtuSize);
+
+            foreach (var item in chunksMessage)
+            {
+                var result = await _mcsXvUarRxDatatCharacteristic.Write(item, false);
+                Thread.Sleep(1);
+            }
+
+            var start = DateTime.Now;
+            Debug.WriteLine("Wait Reponse Data for 2000 ms");
+            while (responseMessage.Count <= 0)
+            {
+                await Task.Delay(1);
+
+                var timeElapsed = DateTime.Now - start;
+
+                if (timeElapsed.TotalMilliseconds > 2000)
+                {
+                    _mcsXvTxDataNotificationsDispose.Dispose();
+                    _mcsXvTxDataNotificationsDispose = null;
+                    throw new TimeoutException("Error reading device Timeout of 3000 ms" + _peripheral.Name);
+                }
+
+            }
+
+            //wait interval more than 200ms to consider message ended
+            var lastMessageCount = responseMessage.Count;
+            var lastMessageTime = DateTime.Now;
+            while ((DateTime.Now - lastMessageTime).TotalMilliseconds < 200)
+            {
+                await Task.Delay(1);
+                var currentMessageCount = responseMessage.Count;
+
+                if (currentMessageCount > lastMessageCount)
+                {
+                    lastMessageTime = DateTime.Now;
+                    lastMessageCount = currentMessageCount;
+                }
+            }
+
+            lblMcsXvServiceService.Text = "Message Received Size:" + responseMessage.Count;
+
 
         }
         catch (Exception ex)
         {
             DisconnectPeripheral();
+            _mcsxvUartService = null;
+            _mcsXvUarRxDatatCharacteristic = null;
+            _mcsXvUartTxDatatCharacteristic = null;
+            if (_mcsXvTxDataNotificationsDispose != null)
+            {
+                _mcsXvTxDataNotificationsDispose.Dispose();
+                _mcsXvTxDataNotificationsDispose=null;
+            }
 
             await DisplayAlert("Alert", "Error connecting to device:" + ex.Message, "OK");
         }
-        finally
-        {
-
-        }
+       
 
 
     }
