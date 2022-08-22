@@ -1,4 +1,6 @@
-﻿using Shiny.BluetoothLE;
+﻿using NModbus;
+using Shiny.BluetoothLE;
+using ShinyTest.Modbus;
 using System.Diagnostics;
 using System.IO;
 using System.Reactive.Concurrency;
@@ -482,9 +484,55 @@ public partial class MainPage : ContentPage
         return mcsxvUartService;
     }
 
+
+    private async Task TestBleNModbusAdapter()
+    {
+
+        try
+        {
+            var bleStream = new BlePortStreamAdapter(_bleManager);
+
+            await bleStream.OpenConnection("XV");
+
+            var factory = new ModbusFactory();
+            IModbusMaster master = factory.CreateRtuMaster(bleStream);
+            master.Transport.Retries = 0;
+            master.Transport.ReadTimeout = 50000;
+
+
+            byte slaveId = 1;
+            ushort startAddress = 1;
+            ushort numRegisters = 5;
+           
+
+            // read five registers		
+            var registers = master.ReadHoldingRegisters(slaveId, startAddress, numRegisters);
+
+            for (var i = 0; i < numRegisters; i++)
+            {
+                Console.WriteLine($"Register {startAddress + i}={registers[i]}");
+            }
+
+            bleStream.Dispose();
+
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Alert", "Error connecting to device:" + ex.Message, "OK");
+        }
+
+
+    }
+
+
+
     private async void cmdMcsXvService_Clicked(object sender, EventArgs e)
     {
 
+        await TestBleNModbusAdapter();
+
+        return;
+        /*
         try
         {
             var accessState = await CheckPermissions();
@@ -499,7 +547,7 @@ public partial class MainPage : ContentPage
             if (_mcsxvUartService == null)
             {
                 _mcsxvUartService = await FindMcsxvUartService();
-                
+
             }
 
             if (_mcsXvUarRxDatatCharacteristic == null)
@@ -602,14 +650,14 @@ public partial class MainPage : ContentPage
             if (_mcsXvTxDataNotificationsDispose != null)
             {
                 _mcsXvTxDataNotificationsDispose.Dispose();
-                _mcsXvTxDataNotificationsDispose=null;
+                _mcsXvTxDataNotificationsDispose = null;
             }
 
             await DisplayAlert("Alert", "Error connecting to device:" + ex.Message, "OK");
         }
-       
 
 
+        */
     }
 
 

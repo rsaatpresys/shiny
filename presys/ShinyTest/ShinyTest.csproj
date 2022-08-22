@@ -52,6 +52,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="NModbus" Version="3.0.72" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\..\src\Shiny.Beacons\Shiny.Beacons.csproj" />
 	  <ProjectReference Include="..\..\src\Shiny.BluetoothLE.Hosting\Shiny.BluetoothLE.Hosting.csproj" />
 	  <ProjectReference Include="..\..\src\Shiny.BluetoothLE\Shiny.BluetoothLE.csproj" />
@@ -67,6 +71,8 @@
 
     <!--needed by Shiny.Notifications & Shiny.Locations-->
     <PackageReference Include="Xamarin.GooglePlayServices.Location" Version="119.0.1.1" />
+
+    <PackageReference Include="NModbus" Version="3.0.72" />
     
   </ItemGroup>
 
