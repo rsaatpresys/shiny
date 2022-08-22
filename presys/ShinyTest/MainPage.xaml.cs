@@ -427,6 +427,88 @@ public partial class MainPage : ContentPage
 
     #region ESP-32 
 
+    #region test BleNModbusAdapter
+
+    BlePortStreamAdapter bleStream = null;
+
+
+    private async void cmdMcsXvService_Clicked(object sender, EventArgs e)
+    {
+        await TestBleNModbusAdapter();
+    }
+
+
+    private async Task TestBleNModbusAdapter()
+    {
+
+        try
+        {
+            this.lblMcsXvServiceService.Text = "Sending Message...";
+            this.lblMcsXvServiceService.IsEnabled = false;
+
+
+
+            if (bleStream == null)
+            {
+                bleStream = new BlePortStreamAdapter(_bleManager);
+
+            }
+
+            await bleStream.OpenConnection("XV");
+
+            var factory = new ModbusFactory();
+            IModbusMaster master = factory.CreateRtuMaster(bleStream);
+            master.Transport.Retries = 0;
+            master.Transport.ReadTimeout = 2000;
+
+
+            byte slaveId = 1;
+            ushort startAddress = 0;
+            ushort numRegisters = 30;
+
+            var writeRegisters = new ushort[15];
+
+            for (int i = 0; i < writeRegisters.Length; i++)
+            {
+                writeRegisters[i]=(ushort)i;
+            }
+
+            await master.WriteMultipleRegistersAsync(slaveId, startAddress, writeRegisters);
+
+            // read five registers		
+            var stopWatch = new Stopwatch();
+
+            stopWatch.Start();
+            var registers = await master.ReadHoldingRegistersAsync(slaveId, startAddress, numRegisters);
+            stopWatch.Stop();
+
+            for (var i = 0; i < numRegisters; i++)
+            {
+                Console.WriteLine($"Register {startAddress + i}={registers[i]}");
+            }
+
+            this.lblMcsXvServiceService.Text = $"Received Ok Quantity:{numRegisters} Time:{stopWatch.ElapsedMilliseconds}";
+
+        }
+        catch (Exception ex)
+        {
+            bleStream.Dispose();
+            bleStream = null;
+            this.lblMcsXvServiceService.Text = "";
+            await DisplayAlert("Alert", "Error connecting to device:" + ex.Message, "OK");
+        }
+        finally
+        {
+            this.lblMcsXvServiceService.IsEnabled = true;
+        }
+
+
+    }
+
+    #endregion
+
+    #region Test BLE Functions 
+
     IObservable<GattCharacteristicResult> _mcsXvTxDataNotifications;
     IDisposable _mcsXvTxDataNotificationsDispose;
 
@@ -484,55 +566,9 @@ public partial class MainPage : ContentPage
         return mcsxvUartService;
     }
 
-
-    private async Task TestBleNModbusAdapter()
+    private async Task TeastBleFunctions()
     {
 
-        try
-        {
-            var bleStream = new BlePortStreamAdapter(_bleManager);
-
-            await bleStream.OpenConnection("XV");
-
-            var factory = new ModbusFactory();
-            IModbusMaster master = factory.CreateRtuMaster(bleStream);
-            master.Transport.Retries = 0;
-            master.Transport.ReadTimeout = 50000;
-
-
-            byte slaveId = 1;
-            ushort startAddress = 1;
-            ushort numRegisters = 5;
-           
-
-            // read five registers		
-            var registers = master.ReadHoldingRegisters(slaveId, startAddress, numRegisters);
-
-            for (var i = 0; i < numRegisters; i++)
-            {
-                Console.WriteLine($"Register {startAddress + i}={registers[i]}");
-            }
-
-            bleStream.Dispose();
-
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlert("Alert", "Error connecting to device:" + ex.Message, "OK");
-        }
-
-
-    }
-
-
-
-    private async void cmdMcsXvService_Clicked(object sender, EventArgs e)
-    {
-
-        await TestBleNModbusAdapter();
-
-        return;
-        /*
         try
         {
             var accessState = await CheckPermissions();
@@ -656,10 +692,9 @@ public partial class MainPage : ContentPage
             await DisplayAlert("Alert", "Error connecting to device:" + ex.Message, "OK");
         }
 
-
-        */
     }
 
+    #endregion
 
     #endregion
 

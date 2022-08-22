@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
@@ -46,7 +47,6 @@ public class BlePortStreamAdapter : IStreamResource
 
     }
 
-
     private async Task FindPeripheral(string deviceName)
     {
         if (_peripheral == null)
@@ -88,12 +88,9 @@ public class BlePortStreamAdapter : IStreamResource
     {
         var accessState = this._bleManager.RequestAccess();
         return accessState;
-
     }
 
-    private byte[] _rxBuffer=new byte[256];
-    private MemoryStream _rxBufferStream;
-    private Queue _rxBufferQueue;
+    private BlockingCollection<byte> _rxBufferQueue;
 
     public async Task OpenConnection(string deviceName)
     {
@@ -130,8 +127,7 @@ public class BlePortStreamAdapter : IStreamResource
 
         _mcsXvTxDataNotifications = _mcsXvUartTxDatatCharacteristic.Notify(useIndicationsIfAvailable: true);
 
-        _rxBufferStream = new MemoryStream();
-        _rxBufferQueue = new Queue();
+        _rxBufferQueue = new BlockingCollection<byte>();
 
         this._mcsXvTxDataNotificationsDispose = this._mcsXvTxDataNotifications.Subscribe((x) =>
         {
@@ -145,10 +141,8 @@ public class BlePortStreamAdapter : IStreamResource
     {
         foreach (var item in x.Data)
         {
-            _rxBufferStream.WriteByte(item);
-            _rxBufferQueue.Enqueue(item);
+            _rxBufferQueue.Add(item);
         }
-        _rxBufferStream.Flush();
     }
 
     #endregion
@@ -215,7 +209,6 @@ public class BlePortStreamAdapter : IStreamResource
 
     #endregion
 
-
     #region NModbus Interface 
 
     public int InfiniteTimeout { get; }
@@ -225,7 +218,7 @@ public class BlePortStreamAdapter : IStreamResource
 
     public void DiscardInBuffer()
     {
-        this._rxBufferStream.Position = 0;
+        while (this._rxBufferQueue.TryTake(out _)) { }
     }
     public void Dispose()
     {
@@ -245,27 +238,20 @@ public class BlePortStreamAdapter : IStreamResource
 
     public int Read(byte[] buffer, int offset, int count)
     {
-        var start = DateTime.Now;
 
-        while (_rxBufferQueue.Count < count)
-        {
-            Thread.Sleep(10);
-
-            var timeElapsed = DateTime.Now - start;
-
-            if (timeElapsed.TotalMilliseconds > ReadTimeout)
-            {
-                throw new TimeoutException($"Error reading device Timeout of {ReadTimeout} ms {_peripheral.Name}");
-            }
-
-        }
+        byte byteToRead = 0;
 
         for (int i = 0; i < count; i++)
         {
-            buffer[i+offset]=(byte)_rxBufferQueue.Dequeue();
+            if (!_rxBufferQueue.TryTake(out byteToRead, ReadTimeout))
+            {
+                throw new InvalidOperationException($"Error Read TryTake in BlePortStreamAdapter {_peripheral.Name}");
+            }
+
+            buffer[i + offset] = byteToRead;
         }
 
-        var resp =count; //  _rxBufferStream.Read(buffer, offset, count);
+        var resp = count;
 
         return resp;
 
