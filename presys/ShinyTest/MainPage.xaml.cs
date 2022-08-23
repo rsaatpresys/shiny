@@ -204,7 +204,7 @@ public partial class MainPage : ContentPage
 
     #endregion
 
-    #region "Conexão Bluetooth"
+    #region Conexão Bluetooth
 
     private async Task FindPeripheral()
     {
@@ -454,12 +454,13 @@ public partial class MainPage : ContentPage
 
             }
 
-            await bleStream.OpenConnection("XV");
+            await bleStream.OpenConnectionAsync("XV");
 
             var factory = new ModbusFactory();
             IModbusMaster master = factory.CreateRtuMaster(bleStream);
             master.Transport.Retries = 0;
             master.Transport.ReadTimeout = 2000;
+            
 
 
             byte slaveId = 1;
@@ -475,7 +476,6 @@ public partial class MainPage : ContentPage
 
             await master.WriteMultipleRegistersAsync(slaveId, startAddress, writeRegisters);
 
-            // read five registers		
             var stopWatch = new Stopwatch();
 
             stopWatch.Start();

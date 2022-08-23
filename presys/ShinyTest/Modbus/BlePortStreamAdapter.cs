@@ -4,12 +4,29 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading.Tasks;
 using NModbus.IO;
 using Shiny.BluetoothLE;
+using System.Threading;
+using Xamarin.KotlinX.Coroutines;
 
 namespace ShinyTest.Modbus;
+
+/// <summary>
+///   NModbus Stream Implemented based in Nordic UART service over BLE
+/// </summary>
+/// <remarks>
+///   Nordic UART Service (NUS)
+///   The Bluetooth® LE GATT Nordic UART Service is a custom service that receives 
+///   and writes data and serves as a bridge to the UART interface.
+///   https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/bluetooth_services/services/nus.html
+/// 
+/// 
+///   https://github.com/nkolban/ESP32_BLE_Arduino/blob/master/examples/BLE_uart/BLE_uart.ino
+/// 
+/// </remarks>
 public class BlePortStreamAdapter : IStreamResource
 {
 
@@ -24,8 +41,20 @@ public class BlePortStreamAdapter : IStreamResource
         this._peripheral = null;
         ReadTimeout = 2000;
         WriteTimeout = 2000;
+        BleScanTimeoutMiliSeconds = 5000;
+        BleConnectTimeouttMiliSeconds = 5000;
         InfiniteTimeout = 1000000;
     }
+
+    public int BleScanTimeoutMiliSeconds { get; set; }
+    public int BleConnectTimeouttMiliSeconds { get; set; }
+
+    public Task<int> ReadRssiAsync()
+    {
+        var rssi = _peripheral.ReadRssi().ToTask();
+        return rssi;
+    }
+
 
     private IObservable<ScanResult> ScanForDevice(int timeout, string deviceName)
     {
@@ -34,7 +63,12 @@ public class BlePortStreamAdapter : IStreamResource
         .Scan()
        .FirstAsync(x =>
        {
-           var foundDeviece = x.Peripheral.Name.Contains(deviceName);
+           var name = x.Peripheral.Name;
+           if (string.IsNullOrEmpty(name))
+           {
+               name="";
+           }
+           var foundDeviece = name.Contains(deviceName);
            return foundDeviece;
        })
         .Timeout(TimeSpan.FromMilliseconds(timeout)).Catch<ScanResult, Exception>(tx =>
@@ -51,7 +85,7 @@ public class BlePortStreamAdapter : IStreamResource
     {
         if (_peripheral == null)
         {
-            var scanDeviceObservable = ScanForDevice(5000, deviceName);
+            var scanDeviceObservable = ScanForDevice(BleScanTimeoutMiliSeconds, deviceName);
             var result = await scanDeviceObservable;
             _peripheral = result.Peripheral;
 
@@ -78,23 +112,21 @@ public class BlePortStreamAdapter : IStreamResource
     {
         var connectionConfig = new ConnectionConfig(AutoConnect: false);
         // connectionConfig.AutoConnect = false;
-        await _peripheral.ConnectAsync(connectionConfig, timeout: new TimeSpan(0, 0, 5));
-
-        var rssi = await _peripheral.ReadRssi();
+        await _peripheral.ConnectAsync(connectionConfig, timeout: new TimeSpan(0, 0, 0, 0, BleConnectTimeouttMiliSeconds));
 
     }
 
-    public IObservable<Shiny.AccessState> CheckPermissions()
+    public Task<Shiny.AccessState> CheckPermissionsAsync()
     {
-        var accessState = this._bleManager.RequestAccess();
+        var accessState = this._bleManager.RequestAccess().ToTask();
         return accessState;
     }
 
     private BlockingCollection<byte> _rxBufferQueue;
 
-    public async Task OpenConnection(string deviceName)
+    public async Task OpenConnectionAsync(string deviceName)
     {
-        var accessState = await CheckPermissions();
+        var accessState = await CheckPermissionsAsync();
 
         if (accessState != Shiny.AccessState.Available)
         {
@@ -103,33 +135,33 @@ public class BlePortStreamAdapter : IStreamResource
 
         await FindPeripheral(deviceName);
 
-        if (_mcsxvUartService == null)
+        if (_nordicUartService == null)
         {
-            _mcsxvUartService = await FindMcsxvUartService();
+            _nordicUartService = await FindNordicUartService();
 
         }
 
-        if (_mcsXvUarRxDatatCharacteristic == null)
+        if (_nordicUartRxDatatCharacteristic == null)
         {
-            _mcsXvUarRxDatatCharacteristic = await FindMcsXvUarRxDatatCharacteristic();
+            _nordicUartRxDatatCharacteristic = await FindNordicUarRxDatatCharacteristic();
         }
 
-        if (_mcsXvUartTxDatatCharacteristic == null)
+        if (_nordicUartTxDatatCharacteristic == null)
         {
-            _mcsXvUartTxDatatCharacteristic = await FindMcsXvUarTxDatatCharacteristic();
+            _nordicUartTxDatatCharacteristic = await FindNordicUarTxDatatCharacteristic();
         }
 
 
-        if (_mcsXvTxDataNotificationsDispose != null)
+        if (_nordicUartTxDataNotificationsDispose != null)
         {
-            _mcsXvTxDataNotificationsDispose.Dispose();
+            _nordicUartTxDataNotificationsDispose.Dispose();
         }
 
-        _mcsXvTxDataNotifications = _mcsXvUartTxDatatCharacteristic.Notify(useIndicationsIfAvailable: true);
+        _nordicUartTxDataNotifications = _nordicUartTxDatatCharacteristic.Notify(useIndicationsIfAvailable: true);
 
         _rxBufferQueue = new BlockingCollection<byte>();
 
-        this._mcsXvTxDataNotificationsDispose = this._mcsXvTxDataNotifications.Subscribe((x) =>
+        this._nordicUartTxDataNotificationsDispose = this._nordicUartTxDataNotifications.Subscribe((x) =>
         {
             ProcessRxBleData(x);
 
@@ -147,64 +179,62 @@ public class BlePortStreamAdapter : IStreamResource
 
     #endregion
 
+    #region Nordic Uart Over Ble Service 
 
-    #region ESP32 Presys Protocol 
-
-    IObservable<GattCharacteristicResult> _mcsXvTxDataNotifications;
-    IDisposable _mcsXvTxDataNotificationsDispose;
-
-    IGattService _mcsxvUartService;
-    IGattCharacteristic _mcsXvUarRxDatatCharacteristic;
-    IGattCharacteristic _mcsXvUartTxDatatCharacteristic;
+    IObservable<GattCharacteristicResult> _nordicUartTxDataNotifications;
+    IDisposable _nordicUartTxDataNotificationsDispose;
+    IGattService _nordicUartService;
+    IGattCharacteristic _nordicUartRxDatatCharacteristic;
+    IGattCharacteristic _nordicUartTxDatatCharacteristic;
 
 
-    private async Task<IGattCharacteristic> FindMcsXvUarRxDatatCharacteristic()
+    private async Task<IGattCharacteristic> FindNordicUarRxDatatCharacteristic()
     {
-        var allCharecteristics = await _mcsxvUartService.GetCharacteristicsAsync().WaitAsync(TimeSpan.FromMilliseconds(5000));
+        var allCharecteristics = await _nordicUartService.GetCharacteristicsAsync().WaitAsync(TimeSpan.FromMilliseconds(5000));
 
-        var mcsxvUartRxDataUuid = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
+        var nordicUartRxDataUuid = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
 
-        var mcsxvUartRxData = allCharecteristics.FirstOrDefault(s => s.Uuid.ToLower() == mcsxvUartRxDataUuid.ToLower());
+        var nordicUartRxData = allCharecteristics.FirstOrDefault(s => s.Uuid.ToLower() == nordicUartRxDataUuid.ToLower());
 
-        if (mcsxvUartRxData == null)
+        if (nordicUartRxData == null)
         {
-            throw new InvalidOperationException("MCSXV Characteristic RxData Not Found ");
+            throw new InvalidOperationException("nordic Characteristic RxData Not Found ");
         }
 
-        return mcsxvUartRxData;
+        return nordicUartRxData;
     }
 
-    private async Task<IGattCharacteristic> FindMcsXvUarTxDatatCharacteristic()
+    private async Task<IGattCharacteristic> FindNordicUarTxDatatCharacteristic()
     {
-        var allCharecteristics = await _mcsxvUartService.GetCharacteristicsAsync().WaitAsync(TimeSpan.FromMilliseconds(5000));
+        var allCharecteristics = await _nordicUartService.GetCharacteristicsAsync().WaitAsync(TimeSpan.FromMilliseconds(5000));
 
-        var mcsxvUartRxDataUuid = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
+        var nordicUartRxDataUuid = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
 
-        var mcsxvUartRxData = allCharecteristics.FirstOrDefault(s => s.Uuid.ToLower() == mcsxvUartRxDataUuid.ToLower());
+        var nordicUartRxData = allCharecteristics.FirstOrDefault(s => s.Uuid.ToLower() == nordicUartRxDataUuid.ToLower());
 
-        if (mcsxvUartRxData == null)
+        if (nordicUartRxData == null)
         {
-            throw new InvalidOperationException("MCSXV Characteristic TxData Not Found ");
+            throw new InvalidOperationException("nordic Characteristic TxData Not Found ");
         }
 
-        return mcsxvUartRxData;
+        return nordicUartRxData;
     }
 
-    private async Task<IGattService> FindMcsxvUartService()
+    private async Task<IGattService> FindNordicUartService()
     {
-        var mcsXvUartServiceUuid = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E";
+        var nordicUartServiceUuid = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E";
 
 
         var allServices = await _peripheral.GetServicesAsync().WaitAsync(TimeSpan.FromMilliseconds(5000));
 
-        var mcsxvUartService = allServices.FirstOrDefault(s => s.Uuid.ToLower() == mcsXvUartServiceUuid.ToLower());
+        var nordicUartService = allServices.FirstOrDefault(s => s.Uuid.ToLower() == nordicUartServiceUuid.ToLower());
 
-        if (mcsxvUartService == null)
+        if (nordicUartService == null)
         {
-            throw new InvalidOperationException("MCSXV UART Service Not Found ");
+            throw new InvalidOperationException("nordic UART Service Not Found ");
         }
 
-        return mcsxvUartService;
+        return nordicUartService;
     }
 
     #endregion
@@ -223,16 +253,16 @@ public class BlePortStreamAdapter : IStreamResource
     public void Dispose()
     {
 
-        if (_mcsXvTxDataNotificationsDispose != null)
+        if (_nordicUartTxDataNotificationsDispose != null)
         {
-            _mcsXvTxDataNotificationsDispose.Dispose();
+            _nordicUartTxDataNotificationsDispose.Dispose();
         }
 
         DisconnectPeripheral();
 
-        _mcsxvUartService = null;
-        _mcsXvUarRxDatatCharacteristic = null;
-        _mcsXvUartTxDatatCharacteristic = null;
+        _nordicUartService = null;
+        _nordicUartRxDatatCharacteristic = null;
+        _nordicUartTxDatatCharacteristic = null;
 
     }
 
@@ -240,18 +270,20 @@ public class BlePortStreamAdapter : IStreamResource
     {
 
         byte byteToRead = 0;
+        int bytesRead = 0;  
 
         for (int i = 0; i < count; i++)
         {
             if (!_rxBufferQueue.TryTake(out byteToRead, ReadTimeout))
             {
-                throw new InvalidOperationException($"Error Read TryTake in BlePortStreamAdapter {_peripheral.Name}");
+                throw new TimeoutException($"Error Reading Device {_peripheral.Name}");
             }
 
             buffer[i + offset] = byteToRead;
+            bytesRead++;
         }
 
-        var resp = count;
+        var resp = bytesRead;
 
         return resp;
 
@@ -269,7 +301,11 @@ public class BlePortStreamAdapter : IStreamResource
 
         foreach (var item in chunksMessage)
         {
-            var result = _mcsXvUarRxDatatCharacteristic.Write(item, false).GetAwaiter().Wait();
+            var result = _nordicUartRxDatatCharacteristic.Write(item, false)
+                        .Timeout(TimeSpan.FromMilliseconds(WriteTimeout)).Catch<GattCharacteristicResult, Exception>(tx =>
+                        {
+                            throw tx;
+                        }).GetAwaiter().Wait();
         }
 
 
