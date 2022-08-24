@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using NModbus.IO;
 using Shiny.BluetoothLE;
 using System.Threading;
-using Xamarin.KotlinX.Coroutines;
 
 namespace ShinyTest.Modbus;
 
@@ -66,7 +65,7 @@ public class BlePortStreamAdapter : IStreamResource
            var name = x.Peripheral.Name;
            if (string.IsNullOrEmpty(name))
            {
-               name="";
+               name = "";
            }
            var foundDeviece = name.Contains(deviceName);
            return foundDeviece;
@@ -253,12 +252,21 @@ public class BlePortStreamAdapter : IStreamResource
     public void Dispose()
     {
 
-        if (_nordicUartTxDataNotificationsDispose != null)
+        try
         {
-            _nordicUartTxDataNotificationsDispose.Dispose();
-        }
 
-        DisconnectPeripheral();
+            if (_nordicUartTxDataNotificationsDispose != null)
+            {
+                _nordicUartTxDataNotificationsDispose.Dispose();
+            }
+
+            DisconnectPeripheral();
+
+        }
+        catch
+        {
+             //TODO: Log dispose exception
+        }
 
         _nordicUartService = null;
         _nordicUartRxDatatCharacteristic = null;
@@ -270,7 +278,7 @@ public class BlePortStreamAdapter : IStreamResource
     {
 
         byte byteToRead = 0;
-        int bytesRead = 0;  
+        int bytesRead = 0;
 
         for (int i = 0; i < count; i++)
         {
@@ -301,11 +309,22 @@ public class BlePortStreamAdapter : IStreamResource
 
         foreach (var item in chunksMessage)
         {
+            Exception txException = null;
+
             var result = _nordicUartRxDatatCharacteristic.Write(item, false)
                         .Timeout(TimeSpan.FromMilliseconds(WriteTimeout)).Catch<GattCharacteristicResult, Exception>(tx =>
                         {
-                            throw tx;
-                        }).GetAwaiter().Wait();
+                            if (txException == null)
+                            {
+                                txException = tx;
+                            }
+                            return Observable.Return<GattCharacteristicResult>(null);
+                        }).GetAwaiter().GetResult();
+
+            if (txException != null)
+            {
+                throw txException;
+            }
         }
 
 

@@ -464,8 +464,8 @@ public partial class MainPage : ContentPage
 
 
             byte slaveId = 1;
-            ushort startAddress = 0;
-            ushort numRegisters = 30;
+            ushort startAddress = 1700;   //1700	Entrada ou valor calculado durante calibracao
+            ushort numRegisters = 30; 	
 
             var writeRegisters = new ushort[15];
 
@@ -474,7 +474,7 @@ public partial class MainPage : ContentPage
                 writeRegisters[i]=(ushort)i;
             }
 
-            await master.WriteMultipleRegistersAsync(slaveId, startAddress, writeRegisters);
+            //await master.WriteMultipleRegistersAsync(slaveId, startAddress, writeRegisters);
 
             var stopWatch = new Stopwatch();
 
